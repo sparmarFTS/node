@@ -19,10 +19,10 @@ const validTypes = [
   { type: 'udp4' },
   { type: 'udp6' }
 ];
-const errMessage = /^Bad socket type specified\. Valid types are: udp4, udp6$/;
 
 // Error must be thrown with invalid types
 invalidTypes.forEach((invalidType) => {
+  const errMessage = `Bad socket type (${invalidType}) specified. Valid types are: udp4, udp6`;
   assert.throws(() => {
     dgram.createSocket(invalidType);
   }, common.expectsError({
@@ -50,12 +50,16 @@ validTypes.forEach((validType) => {
 
   socket.bind(common.mustCall(() => {
     // note: linux will double the buffer size
-    assert.ok(socket.getRecvBufferSize() === 10000 ||
-              socket.getRecvBufferSize() === 20000,
-              'SO_RCVBUF not 1300 or 2600');
-    assert.ok(socket.getSendBufferSize() === 15000 ||
-              socket.getSendBufferSize() === 30000,
-              'SO_SNDBUF not 1800 or 3600');
+    const goodRecvBufferSize = 10000;
+    const goodLinuxRecvBufferSize = 20000;
+    assert.ok(socket.getRecvBufferSize() === goodRecvBufferSize ||
+              socket.getRecvBufferSize() === goodLinuxRecvBufferSize,
+              `SO_RCVBUF is ${socket.getRecvBufferSize()}, but should be ${goodRecvBufferSize} or ${goodLinuxRecvBufferSize}`);
+    const goodSendBufferSize = 15000;
+    const goodLinuxSendBufferSize = 30000;
+    assert.ok(socket.getSendBufferSize() === goodSendBufferSize ||
+              socket.getSendBufferSize() === goodLinuxSendBufferSize,
+              `SO_SNDBUF is ${socket.getSendBufferSize()}, , but should be ${goodSendBufferSize} or ${goodLinuxSendBufferSize}`);
     socket.close();
   }));
 }
